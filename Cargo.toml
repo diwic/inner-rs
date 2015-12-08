@@ -1,0 +1,5 @@
+[package]
+name = "inner"
+version = "0.1.0"
+authors = ["David Henningsson <david.henningsson@canonical.com>"]
+license = "Apache2.0/MIT"
