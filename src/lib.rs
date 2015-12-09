@@ -1,8 +1,10 @@
 //! The `inner!` macro makes descending into an enum variant
 //! more ergonomic.
 //!
+//! The `some!` and `ok!` macros turn your enum into an `Option` and `Result`, respectively.
+//!
 //! # Helpful unwrap
-//! The simplest case is almost like unwrap:
+//! The simplest case for `inner!` is almost like unwrap:
 //!
 //! ```
 //! # #[macro_use] extern crate inner;
@@ -219,6 +221,104 @@ macro_rules! inner {
     };
 }
 
+/// Converts your enum to an Option.
+///
+/// # Examples
+///
+/// ```ignore
+/// assert_eq!(some!(Fruit::Apple(15), if Fruit::Apple), Some(15));
+/// assert_eq!(some!(Fruit::Orange(5), if Fruit::Apple), None);
+/// ```
+#[macro_export]
+macro_rules! some {
+    ($x:expr, if $i:path, else |$e:ident| $b:block) => {
+        {
+            match $x {
+                $i(q) => Some(q),
+                $e @ _ => $b,
+            }
+        }
+    };
+
+    ($x:expr, if $i:path, else $b:block) => {
+        {
+            match $x {
+                $i(q) => Some(q),
+                _ => $b,
+            }
+        }
+    };
+
+    ($x:expr, if $i:path) => {
+        {
+            match $x {
+                $i(q) => Some(q),
+                _ => None,
+            }
+        }
+    };
+}
+
+/// Converts your enum to an Result.
+///
+/// # Examples
+///
+/// ```ignore
+/// assert_eq!(ok!(Fruit::Apple(15), if Fruit::Apple), Ok(15));
+/// assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple), Err(Fruit::Orange(5)));
+///
+/// assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple, or {75}), Err(75));
+/// assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple, else {Err(75)}), Err(75));
+/// ```
+#[macro_export]
+macro_rules! ok {
+    ($x:expr, if $i:path, else |$e:ident| $b:block) => {
+        {
+            match $x {
+                $i(q) => Ok(q),
+                $e @ _ => $b,
+            }
+        }
+    };
+
+    ($x:expr, if $i:path, else $b:block) => {
+        {
+            match $x {
+                $i(q) => Ok(q),
+                _ => $b,
+            }
+        }
+    };
+
+    ($x:expr, if $i:path, or |$e:ident| $b:block) => {
+        {
+            match $x {
+                $i(q) => Ok(q),
+                $e @ _ => Err($b),
+            }
+        }
+    };
+
+    ($x:expr, if $i:path, or $b:block) => {
+        {
+            match $x {
+                $i(q) => Ok(q),
+                _ => Err($b),
+            }
+        }
+    };
+
+    ($x:expr, if $i:path) => {
+        {
+            match $x {
+                $i(q) => Ok(q),
+                n @ _ => Err(n),
+            }
+        }
+    };
+}
+
+
 #[test]
 fn simple_opt() {
     assert_eq!(inner!(Some(7)), 7);
@@ -295,5 +395,43 @@ fn own_enum() {
         9
     }));
 
+}
+
+#[test]
+fn some() {
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum Fruit {
+        Apple(i32),
+        Orange(i16),
+    }
+
+    assert_eq!(some!(Fruit::Apple(15), if Fruit::Apple), Some(15));
+    assert_eq!(some!(Fruit::Orange(15), if Fruit::Apple), None);
+    assert_eq!(some!(Fruit::Orange(15), if Fruit::Apple, else |e| {
+        assert_eq!(e, Fruit::Orange(15));
+        Some(30)
+    }), Some(30));
+}
+
+#[test]
+fn ok() {
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum Fruit {
+        Apple(i32),
+        Orange(i16),
+    }
+
+    assert_eq!(ok!(Fruit::Apple(15), if Fruit::Apple), Ok(15));
+
+    assert_eq!(ok!(Fruit::Orange(15), if Fruit::Apple), Err(Fruit::Orange(15)));
+    assert_eq!(ok!(Fruit::Orange(15), if Fruit::Apple, else |e| {
+        assert_eq!(e, Fruit::Orange(15));
+        Err(3)
+    }), Err(3));
+
+    assert_eq!(ok!(Fruit::Apple(15), if Fruit::Orange, or {67}), Err(67));
+    assert_eq!(ok!(Fruit::Apple(15), if Fruit::Apple, or {67}), Ok(15));
 }
 
