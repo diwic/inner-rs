@@ -1,5 +1,10 @@
 The `inner!` macro makes descending into an enum variant
-more ergonomic.
+more ergonomic. The `some!` and `ok!` macros turns an enum
+into an `Option` or `Result`. 
+
+[Crates.io](https://crates.io/crates/inner/)
+
+[API Documentation](http://diwic.github.io/rs-docs/inner/index.html)
 
 # Helpful unwrap
 The simplest case is almost like unwrap:
@@ -90,6 +95,29 @@ inner!(z, if Fruit::Apple, else |e| {
     return;
 });
 ```
+
+You can also turn your enum into a `Option` with the `Some` macro:
+
+```rust
+assert_eq!(some!(Fruit::Apple(15), if Fruit::Apple), Some(15));
+assert_eq!(some!(Fruit::Orange(5), if Fruit::Apple), None);
+assert_eq!(some!(Fruit::Orange(5), if Fruit::Apple, else |e| {Some(e + 2)}), Some(7));
+```
+
+Or into a `Result` with the `ok!()` macro:
+
+```rust
+assert_eq!(ok!(Fruit::Apple(15), if Fruit::Apple), Ok(15));
+assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple), Err(Fruit::Orange(5)));
+
+assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple, or |e| {e + 70}), Err(75));
+assert_eq!(ok!(Fruit::Orange(5), if Fruit::Apple, else {Err(75)}), Err(75));
+```
+
+Notice that the `ok!()` macro has an optional `or` clause that encapsulates the
+expression in an `Err`, whereas the `else` clause gives you maximum flexibility
+to return either an `Err` or an `Ok`.
+
 
 Another option is to implement this crate's `IntoResult` trait for
 your enum. Then you don't have to write an `if` clause to tell what
