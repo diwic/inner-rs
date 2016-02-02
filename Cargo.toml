@@ -2,4 +2,9 @@
 name = "inner"
 version = "0.1.0"
 authors = ["David Henningsson <david.henningsson@canonical.com>"]
-license = "Apache2.0/MIT"
+license = "Apache-2.0/MIT"
+description = "The inner! macro descends into an enum variant. It's more flexible than try!() and unwrap(), and it works with your enum, too!"
+documentation = "http://diwic.github.io/rs-docs/inner/index.html"
+repository = "https://github.com/diwic/inner-rs"
+keywords = ["unwrap", "try", "let", "else"]
+
