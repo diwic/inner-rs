@@ -1,6 +1,6 @@
 [package]
 name = "inner"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["David Henningsson <david.henningsson@canonical.com>"]
 license = "Apache-2.0/MIT"
 description = "The inner! macro descends into an enum variant. It's more flexible than try!() and unwrap(), and it works with your enum, too!"
